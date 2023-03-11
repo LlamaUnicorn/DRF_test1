@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from .models import Country, Manufacturer, Car, Comment
 
@@ -95,6 +96,12 @@ class CarSerializer(serializers.ModelSerializer):
         representation['manufacturer'] = ManufacturerSerializer(instance.manufacturer).data
         representation['comment_count'] = self.get_comment_count(instance)
         return representation
+    
+    def create(self, validated_data):
+        manufacturer_data = validated_data.pop('manufacturer')
+        manufacturer = Manufacturer.objects.get_or_create(**manufacturer_data)[0]
+        car = Car.objects.create(manufacturer=manufacturer, **validated_data)
+        return car
     
 
 class ManufacturerDetailSerializer(serializers.ModelSerializer):
