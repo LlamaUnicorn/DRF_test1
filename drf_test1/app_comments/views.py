@@ -1,72 +1,53 @@
 import csv
-import openpyxl
-import pytz
 from datetime import datetime
+from typing import List
+
+import openpyxl
+from openpyxl import Workbook
+# import pytz
 
 from django.http import HttpResponse
 from django.views import View
-
 from django.utils import timezone
-from django.core.exceptions import ValidationError
-from openpyxl import Workbook
+from rest_framework import viewsets  #, exceptions, status, permissions
+# from rest_framework.authentication import TokenAuthentication
+# from rest_framework.decorators import action, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly  # , BasePermission
+# from rest_framework.response import Response
 
-from rest_framework import exceptions
-from rest_framework import status
-from rest_framework import viewsets, permissions
-from rest_framework.authentication import TokenAuthentication
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.decorators import authentication_classes, permission_classes, action
-
-
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from .models import Car, Comment, Country, Manufacturer
 from .permissions import IsTokenAuthenticatedOrReadOnly
-from .models import Country, Manufacturer, Car, Comment
-from .serializers import (
-    CountrySerializer,
-    ManufacturerSerializer,
-    CarSerializer,
-    CommentSerializer,
-)
-
-
-
-class TokenHasScope(BasePermission):
-    def has_permission(self, request, view):
-        token = request.auth
-        if not token:
-            raise exceptions.AuthenticationFailed('Authentication credentials were not provided.')
-        elif not hasattr(token, 'is_staff'):
-            return False
-        return token.is_staff
+from .serializers import CarSerializer, CommentSerializer, CountrySerializer, ManufacturerSerializer
 
 
 class CountryViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows countries to be viewed or edited."""
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     permission_classes = [IsTokenAuthenticatedOrReadOnly]
 
 
 class ManufacturerViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows manufacturers to be viewed or edited."""
     queryset = Manufacturer.objects.all()
     serializer_class = ManufacturerSerializer
     permission_classes = [IsTokenAuthenticatedOrReadOnly]
 
 
 class CarViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows cars to be viewed or edited."""
     queryset = Car.objects.all()
     serializer_class = CarSerializer
     permission_classes = [IsTokenAuthenticatedOrReadOnly]
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows comments to be viewed or edited."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
     def get_permissions(self):
+        """Return the permissions that this view requires."""
         permission_classes = [IsAuthenticatedOrReadOnly]
 
         if self.action in ['update', 'partial_update', 'destroy']:
@@ -76,7 +57,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     
 
 class CarExportView(View):
+    """A view for exporting cars data in CSV or XLSX format."""
     def get(self, request):
+        """Handle GET requests to the view."""
         # Get the format from the query parameters
         export_format = request.GET.get('format', 'csv')
 
@@ -129,6 +112,7 @@ class CarExportView(View):
 
 
 class CountryExportView(View):
+    """A view for exporting country data in CSV or XLSX format."""
     def get(self, request, *args, **kwargs):
         format = request.GET.get('format')
         if format not in ['csv', 'xlsx']:
@@ -164,6 +148,7 @@ class CountryExportView(View):
 
 
 class ManufacturerExportView(View):
+    """A view for exporting manufacturer data in CSV or XLSX format."""
     def get(self, request, *args, **kwargs):
         format = request.GET.get('format', 'csv')
 
@@ -207,8 +192,8 @@ class ManufacturerExportView(View):
             return HttpResponse(status=400, content='Bad request')
 
 
-
 class CommentsExportView(View):
+    """A view for exporting comments data in CSV or XLSX format."""
     def get(self, request, *args, **kwargs):
         format = request.GET.get('format', 'csv')
         if format not in ['csv', 'xlsx']:
@@ -236,4 +221,3 @@ class CommentsExportView(View):
                 worksheet.append([comment.id, comment.email, comment.car.name, comment.comment, created_at])
             workbook.save(response)
             return response
-        
