@@ -1,5 +1,7 @@
 import csv
 import openpyxl
+import pytz
+from datetime import datetime
 
 from django.http import HttpResponse
 from django.views import View
@@ -203,3 +205,35 @@ class ManufacturerExportView(View):
 
         else:
             return HttpResponse(status=400, content='Bad request')
+
+
+
+class CommentsExportView(View):
+    def get(self, request, *args, **kwargs):
+        format = request.GET.get('format', 'csv')
+        if format not in ['csv', 'xlsx']:
+            format = 'csv'
+        comments = Comment.objects.all()
+
+        if format == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="comments.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['id', 'email', 'car', 'comment', 'created_at'])
+            for comment in comments:
+                writer.writerow([comment.id, comment.email, comment.car.name, comment.comment, comment.created_at])
+            return response
+
+        elif format == 'xlsx':
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="comments.xlsx"'
+            workbook = Workbook()
+            worksheet = workbook.active
+            worksheet.title = 'Comments'
+            worksheet.append(['id', 'email', 'car', 'comment', 'created_at'])
+            for comment in comments:
+                created_at = comment.created_at.astimezone().replace(tzinfo=None)
+                worksheet.append([comment.id, comment.email, comment.car.name, comment.comment, created_at])
+            workbook.save(response)
+            return response
+        
