@@ -3,6 +3,9 @@ import openpyxl
 
 from django.http import HttpResponse
 from django.views import View
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from openpyxl import Workbook
 
 from rest_framework import exceptions
 from rest_framework import status
@@ -120,5 +123,38 @@ class CarExportView(View):
             response = HttpResponse('Invalid export format.', content_type='text/plain', status=400)
 
         return response
-    
 
+
+class CountryExportView(View):
+    def get(self, request, *args, **kwargs):
+        format = request.GET.get('format')
+        if format not in ['csv', 'xlsx']:
+            return HttpResponse('Unsupported format')
+
+        # Get the data
+        queryset = Country.objects.all()
+        serializer = CountrySerializer(queryset, many=True)
+        data = serializer.data
+
+        # Export to CSV
+        if format == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="countries_{}.csv"'.format(timezone.now().strftime('%Y%m%d_%H%M%S'))
+            writer = csv.writer(response)
+            writer.writerow(['id', 'name'])
+            for row in data:
+                writer.writerow([row['id'], row['name']])
+            return response
+
+        # Export to XLSX
+        if format == 'xlsx':
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="countries_{}.xlsx"'.format(timezone.now().strftime('%Y%m%d_%H%M%S'))
+            wb = Workbook()
+            ws = wb.active
+            ws.title = 'Countries'
+            ws.append(['id', 'name'])
+            for row in data:
+                ws.append([row['id'], row['name']])
+            wb.save(response)
+            return response

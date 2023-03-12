@@ -6,6 +6,7 @@ urlpatterns = [
     # Countries
     path('countries/', views.CountryViewSet.as_view({'get': 'list', 'post': 'create'}), name='country-list'),
     path('countries/<int:pk>/', views.CountryViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='country-detail'),
+    path('countries/export/', views.CountryExportView.as_view(), name='country-export'),
 
     # Manufacturers
     path('manufacturers/', views.ManufacturerViewSet.as_view({'get': 'list', 'post': 'create'}), name='manufacturer-list'),
