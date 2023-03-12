@@ -31,25 +31,64 @@ class TokenHasScope(BasePermission):
         return token.is_staff
 
 
+# class CountryViewSet(viewsets.ModelViewSet):
+#     queryset = Country.objects.all()
+#     serializer_class = CountrySerializer
+#     permission_classes = [IsAuthenticated]
+
+
+# class ManufacturerViewSet(viewsets.ModelViewSet):
+#     queryset = Manufacturer.objects.all()
+#     serializer_class = ManufacturerSerializer
+#     permission_classes = [IsAuthenticated]
+
+
+# class CarViewSet(viewsets.ModelViewSet):
+#     queryset = Car.objects.all()
+#     serializer_class = CarSerializer
+#     permission_classes = [IsAuthenticated]  # [IsAuthenticatedOrReadOnly, TokenHasScope]
+
+
+# class CommentViewSet(viewsets.ModelViewSet):
+#     queryset = Comment.objects.all()
+#     serializer_class = CommentSerializer
+#     permission_classes = [IsAuthenticated]
+
+from .permissions import IsTokenAuthenticatedOrReadOnly
+
+
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsTokenAuthenticatedOrReadOnly]
 
 
 class ManufacturerViewSet(viewsets.ModelViewSet):
     queryset = Manufacturer.objects.all()
     serializer_class = ManufacturerSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsTokenAuthenticatedOrReadOnly]
 
 
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.all()
     serializer_class = CarSerializer
-    permission_classes = [IsAuthenticated]  # [IsAuthenticatedOrReadOnly, TokenHasScope]
+    permission_classes = [IsTokenAuthenticatedOrReadOnly]
+
+
+# class CommentViewSet(viewsets.ModelViewSet):
+#     queryset = Comment.objects.all()
+#     serializer_class = CommentSerializer
+#     permission_classes = [IsTokenAuthenticatedOrReadOnly]
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        permission_classes = [IsAuthenticatedOrReadOnly]
+
+        if self.action in ['update', 'partial_update', 'destroy']:
+            permission_classes = [IsAuthenticated]
+
+        return [permission() for permission in permission_classes]
