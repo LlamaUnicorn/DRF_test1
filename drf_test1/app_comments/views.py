@@ -3,6 +3,7 @@ import openpyxl
 
 from django.http import HttpResponse
 from django.views import View
+
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from openpyxl import Workbook
@@ -158,3 +159,47 @@ class CountryExportView(View):
                 ws.append([row['id'], row['name']])
             wb.save(response)
             return response
+
+
+class ManufacturerExportView(View):
+    def get(self, request, *args, **kwargs):
+        format = request.GET.get('format', 'csv')
+
+        manufacturers = Manufacturer.objects.all()
+
+        if format == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="manufacturers.csv"'
+
+            writer = csv.writer(response)
+            writer.writerow(['ID', 'Name', 'Country'])
+
+            for manufacturer in manufacturers:
+                writer.writerow([manufacturer.id, manufacturer.name, manufacturer.country.name])
+
+            return response
+
+        elif format == 'xlsx':
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="manufacturers.xlsx"'
+
+            workbook = Workbook()
+            worksheet = workbook.active
+            worksheet.title = 'Manufacturers'
+
+            headers = ['ID', 'Name', 'Country']
+            for col_num, column_title in enumerate(headers, 1):
+                cell = worksheet.cell(row=1, column=col_num)
+                cell.value = column_title
+
+            for row_num, manufacturer in enumerate(manufacturers, 1):
+                row = [manufacturer.id, manufacturer.name, manufacturer.country.name]
+                for col_num, cell_value in enumerate(row, 1):
+                    cell = worksheet.cell(row=row_num+1, column=col_num)
+                    cell.value = cell_value
+
+            workbook.save(response)
+            return response
+
+        else:
+            return HttpResponse(status=400, content='Bad request')

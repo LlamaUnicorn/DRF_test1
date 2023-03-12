@@ -11,6 +11,8 @@ urlpatterns = [
     # Manufacturers
     path('manufacturers/', views.ManufacturerViewSet.as_view({'get': 'list', 'post': 'create'}), name='manufacturer-list'),
     path('manufacturers/<int:pk>/', views.ManufacturerViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='manufacturer-detail'),
+    path('manufacturers/export/', views.ManufacturerExportView.as_view(), name='manufacturer-export'),
+
 
     # Cars
     path('cars/', views.CarViewSet.as_view({'get': 'list', 'post': 'create'}), name='car-list'),
