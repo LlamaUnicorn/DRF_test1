@@ -6,9 +6,28 @@ from .models import Country, Manufacturer, Car, Comment
 class ManufacturerSerializer(serializers.ModelSerializer):
     """Serializer for Manufacturer model."""
 
+    country = serializers.StringRelatedField()
+    car_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Manufacturer
-        fields = ["id", "name", "country"]
+        fields = [
+            "id",
+            "name",
+            "country",
+            "car_count",
+            "comment_count",
+        ]
+
+    def get_car_count(self, obj):
+        """Return the number of cars associated with a Manufacturer instance."""
+        return obj.car_set.count()
+
+    def get_comment_count(self, obj):
+        """Return the total number of comments associated with a Manufacturer instance."""
+        cars = obj.car_set.all()
+        return Comment.objects.filter(car__in=cars).count()
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -60,9 +79,9 @@ class CarSerializer(serializers.ModelSerializer):
         and the number of comments associated with it.
         """
         representation = super().to_representation(instance)
-        representation["manufacturer"] = ManufacturerSerializer(
-            instance.manufacturer
-        ).data
+        manufacturer = instance.manufacturer
+        manufacturer_serializer = ManufacturerSerializer(manufacturer)
+        representation["manufacturer"] = manufacturer_serializer.data
         representation["comment_count"] = self.get_comment_count(instance)
         return representation
 
@@ -72,34 +91,6 @@ class CarSerializer(serializers.ModelSerializer):
         manufacturer = Manufacturer.objects.get_or_create(**manufacturer_data)[0]
         car = Car.objects.create(manufacturer=manufacturer, **validated_data)
         return car
-
-
-class ManufacturerDetailSerializer(serializers.ModelSerializer):
-    """Serializer for Manufacturer model with additional details."""
-
-    country = CountrySerializer()
-    cars = CarSerializer(many=True, read_only=True)
-    comment_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Manufacturer
-        fields = ["id", "name", "country", "cars", "comment_count"]
-
-    def get_comment_count(self, obj):
-        """Return the number of comments associated with all cars of the manufacturer."""
-        return Comment.objects.filter(car__manufacturer=obj).count()
-
-    def to_representation(self, instance):
-        """
-        Return the representation of a Manufacturer instance,
-        including a serialized representation of its country,
-        cars and the number of comments associated with it.
-        """
-        representation = super().to_representation(instance)
-        representation["country"] = CountrySerializer(instance.country).data
-        representation["cars"] = CarSerializer(instance.cars.all(), many=True).data
-        representation["comment_count"] = self.get_comment_count(instance)
-        return representation
 
 
 class CommentSerializer(serializers.ModelSerializer):
