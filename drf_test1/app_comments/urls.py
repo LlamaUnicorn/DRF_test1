@@ -22,7 +22,6 @@ urlpatterns = [
     path('comments/', views.CommentViewSet.as_view({'get': 'list', 'post': 'create'}), name='comment-list'),
     path('comments/<int:pk>/', views.CommentViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='comment-detail'),
     path('comments/export/', views.CommentsExportView.as_view(), name='comment-export'),
-
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
