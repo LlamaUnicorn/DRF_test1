@@ -4,16 +4,12 @@ from typing import List
 
 import openpyxl
 from openpyxl import Workbook
-# import pytz
 
 from django.http import HttpResponse
 from django.views import View
 from django.utils import timezone
-from rest_framework import viewsets  #, exceptions, status, permissions
-# from rest_framework.authentication import TokenAuthentication
-# from rest_framework.decorators import action, authentication_classes, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly  # , BasePermission
-# from rest_framework.response import Response
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from .models import Car, Comment, Country, Manufacturer
 from .permissions import IsTokenAuthenticatedOrReadOnly
