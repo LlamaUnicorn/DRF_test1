@@ -17,6 +17,12 @@ login: auth_user1
 pass: auth_user1pass
 token: 862dd9639ae2f456c3e9e9193be74e787d5b2a53
 ```
+## Restore the database from dump
+```
+sudo -u postgres psql
+createdb drf_test1
+psql drf_test1 < drf_test1.dump
+```
 ## HTTPie
 ```
 sudo apt-get install httpie
